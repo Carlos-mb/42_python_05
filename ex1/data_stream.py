@@ -3,6 +3,11 @@ from typing import Any, List, Dict, Optional
 
 
 class DataStream(ABC):
+    """Abstract base class for processing data streams.
+
+    Defines the interface for different types of data streams that can
+    process batches, filter data, and provide statistics.
+    """
 
     def __init__(self, stream_id: str) -> None:
         """Initialize stream metadata and counters.
@@ -19,6 +24,9 @@ class DataStream(ABC):
 
         Args:
             data_batch: Items to process.
+
+        Returns:
+            A string summary of the processed batch.
         """
         pass
 
@@ -32,14 +40,17 @@ class DataStream(ABC):
         Args:
             data_batch: Items to filter.
             criteria: Optional filter criteria.
+
+        Returns:
+            The filtered list of items.
         """
         return data_batch
 
     def get_stats(self) -> Dict[str, str | int | float]:
         """Return basic stream statistics.
 
-        Args:
-            None.
+        Returns:
+            A dictionary containing stream_id and processed_count.
         """
         return {
             "stream_id": self.stream_id,
@@ -48,6 +59,11 @@ class DataStream(ABC):
 
 
 class SensorStream(DataStream):
+    """Stream processor for sensor data readings.
+
+    Processes numerical sensor readings, calculates averages,
+    and provides filtering by high/standard values.
+    """
 
     def __init__(self, stream_id: str) -> None:
         """Initialize a sensor stream.
@@ -62,6 +78,9 @@ class SensorStream(DataStream):
 
         Args:
             data_batch: Sensor readings to process.
+
+        Returns:
+            A string summary with reading count and average.
         """
         try:
             average = sum(data_batch) / len(data_batch)
@@ -82,7 +101,10 @@ class SensorStream(DataStream):
 
         Args:
             data_batch: Sensor readings to filter.
-            criteria: Filter criteria for readings.
+            criteria: Filter criteria for readings ("high" or "standard").
+
+        Returns:
+            The filtered list of sensor readings.
         """
         try:
             if criteria == "high":
@@ -94,7 +116,12 @@ class SensorStream(DataStream):
         return data_batch
 
     def get_stats(self) -> Dict[str, str | int | float]:
-        """Return basic stream statistics with personalized text"""
+        """Return basic stream statistics with personalized text.
+
+        Returns:
+            A dictionary containing sensor-prefixed stream_id and
+            processed_count.
+        """
         return {
             "stream_id": "Sensor: " + self.stream_id,
             "processed_count": self.processed_count
@@ -102,6 +129,11 @@ class SensorStream(DataStream):
 
 
 class TransactionStream(DataStream):
+    """Stream processor for financial transaction data.
+
+    Processes transaction values, calculates net flow,
+    and provides filtering by positive/negative values.
+    """
 
     def __init__(self, stream_id: str) -> None:
         """Initialize a transaction stream.
@@ -116,6 +148,9 @@ class TransactionStream(DataStream):
 
         Args:
             data_batch: Transaction values to process.
+
+        Returns:
+            A string summary with operation count and net flow.
         """
         try:
             total = sum(data_batch)
@@ -137,7 +172,11 @@ class TransactionStream(DataStream):
 
         Args:
             data_batch: Transaction values to filter.
-            criteria: Filter criteria for transactions.
+            criteria: Filter criteria for transactions
+                ("positive" or "negative").
+
+        Returns:
+            The filtered list of transactions.
         """
 
         if criteria is None:
@@ -153,7 +192,12 @@ class TransactionStream(DataStream):
         return data_batch
 
     def get_stats(self) -> Dict[str, str | int | float]:
-        """Return basic stream statistics with personalized text"""
+        """Return basic stream statistics with personalized text.
+
+        Returns:
+            A dictionary containing transaction-prefixed stream_id and
+            processed_count.
+        """
         return {
             "stream_id": "Transactions: " + self.stream_id,
             "processed_count": self.processed_count
@@ -161,6 +205,11 @@ class TransactionStream(DataStream):
 
 
 class EventStream(DataStream):
+    """Stream processor for event log data.
+
+    Processes event entries, counts errors,
+    and provides filtering by error/info events.
+    """
 
     def __init__(self, stream_id: str) -> None:
         """Initialize an event stream.
@@ -175,6 +224,9 @@ class EventStream(DataStream):
 
         Args:
             data_batch: Event entries to process.
+
+        Returns:
+            A string summary with event count and error count.
         """
         try:
             total = len(data_batch)
@@ -200,7 +252,10 @@ class EventStream(DataStream):
 
         Args:
             data_batch: Event entries to filter.
-            criteria: Filter criteria for events.
+            criteria: Filter criteria for events ("error" or "info").
+
+        Returns:
+            The filtered list of events.
         """
 
         if criteria is None:
@@ -217,7 +272,12 @@ class EventStream(DataStream):
         return data_batch
 
     def get_stats(self) -> Dict[str, str | int | float]:
-        """Return basic stream statistics with personalized text"""
+        """Return basic stream statistics with personalized text.
+
+        Returns:
+            A dictionary containing event-prefixed stream_id and
+            processed_count.
+        """
         return {
             "stream_id": "Events: " + self.stream_id,
             "processed_count": self.processed_count
@@ -225,6 +285,11 @@ class EventStream(DataStream):
 
 
 class StreamProcessor:
+    """Coordinates processing and filtering across multiple data streams.
+
+    Manages a collection of DataStream instances and orchestrates
+    batch processing and filtering operations.
+    """
 
     def __init__(self, streams: List[DataStream]) -> None:
         """Initialize the processor with streams.
@@ -241,6 +306,9 @@ class StreamProcessor:
 
         Args:
             data_map: Mapping of stream IDs to data batches.
+
+        Returns:
+            None. Results are printed to stdout.
         """
 
         for stream in self.streams:
@@ -260,6 +328,9 @@ class StreamProcessor:
         Args:
             data_map: Mapping of stream IDs to data batches.
             criteria_map: Mapping of stream IDs to filter criteria.
+
+        Returns:
+            None. Results are printed to stdout.
         """
 
         for stream in self.streams:
@@ -276,7 +347,11 @@ class StreamProcessor:
 
 
 def main() -> None:
+    """Main function demonstrating stream processing functionality.
 
+    Creates sensor, transaction, and event streams, then demonstrates
+    batch processing, filtering, and statistics gathering.
+    """
     data_streams: List[DataStream] = [
         SensorStream("SENSOR_001"),
         TransactionStream("TRANS_001"),
