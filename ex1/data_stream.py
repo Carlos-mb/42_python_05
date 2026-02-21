@@ -12,7 +12,6 @@ class DataStream(ABC):
         """
         self.processed_count: int = 0
         self.stream_id: str = stream_id
-        self.type: str = ""
 
     @abstractmethod
     def process_batch(self, data_batch: List[Any]) -> str:
@@ -57,7 +56,6 @@ class SensorStream(DataStream):
             stream_id: Unique identifier for the stream.
         """
         super().__init__(stream_id)
-        self.type = "Environmental Data"
 
     def process_batch(self, data_batch: List[Any]) -> str:
         """Process sensor readings and report the average.
@@ -76,19 +74,16 @@ class SensorStream(DataStream):
         except (TypeError, ZeroDivisionError):
             return f"[{self.stream_id}] Invalid sensor data"
 
-        return "Nothing to do"
-    
     def filter_data(
-        self,
-        data_batch: List[Any],
-        criteria: Optional[str] = None) -> List[Any]:
+                    self,
+                    data_batch: List[Any],
+                    criteria: Optional[str] = None) -> List[Any]:
         """Filter sensor readings by criteria.
 
         Args:
             data_batch: Sensor readings to filter.
             criteria: Filter criteria for readings.
         """
-
         try:
             if criteria == "high":
                 return [data for data in data_batch if data > 30]
@@ -97,6 +92,14 @@ class SensorStream(DataStream):
         except TypeError:
             return data_batch
         return data_batch
+
+    def get_stats(self) -> Dict[str, str | int | float]:
+        """Return basic stream statistics with personalized text"""
+        return {
+            "stream_id": "Sensor: " + self.stream_id,
+            "processed_count": self.processed_count
+        }
+
 
 class TransactionStream(DataStream):
 
@@ -107,7 +110,6 @@ class TransactionStream(DataStream):
             stream_id: Unique identifier for the stream.
         """
         super().__init__(stream_id)
-        self.type = "Transaction Stream"
 
     def process_batch(self, data_batch: List[Any]) -> str:
         """Process transactions and report the net flow.
@@ -125,14 +127,12 @@ class TransactionStream(DataStream):
 
         except TypeError:
             return f"[{self.stream_id}] Invalid transaction data"
-        
-        return "Nothing to do"
 
     def filter_data(
-        self,
-        data_batch: List[Any],
-        criteria: Optional[str] = None
-    ) -> List[Any]:
+                    self,
+                    data_batch: List[Any],
+                    criteria: Optional[str] = None
+                ) -> List[Any]:
         """Filter transactions by criteria.
 
         Args:
@@ -145,11 +145,19 @@ class TransactionStream(DataStream):
         try:
             if criteria == "positive":
                 return [data for data in data_batch if data >= 0]
-            if criteria == "negative":
+            elif criteria == "negative":
                 return [data for data in data_batch if data < 0]
-        finally:
+        except (TypeError, ValueError):
             return data_batch
-        # A different way to manage exceptions
+
+        return data_batch
+
+    def get_stats(self) -> Dict[str, str | int | float]:
+        """Return basic stream statistics with personalized text"""
+        return {
+            "stream_id": "Transactions: " + self.stream_id,
+            "processed_count": self.processed_count
+        }
 
 
 class EventStream(DataStream):
@@ -161,7 +169,6 @@ class EventStream(DataStream):
             stream_id: Unique identifier for the stream.
         """
         super().__init__(stream_id)
-        self.type = "Event Stream"
 
     def process_batch(self, data_batch: List[Any]) -> str:
         """Process events and report error counts.
@@ -184,8 +191,6 @@ class EventStream(DataStream):
         except TypeError:
             return f"[{self.stream_id}] Invalid event data"
 
-        return "Nothing to do"
-
     def filter_data(
         self,
         data_batch: List[Any],
@@ -200,16 +205,24 @@ class EventStream(DataStream):
 
         if criteria is None:
             return data_batch
-        
+
         try:
             if criteria == "error":
                 return [data for data in data_batch if "error" in data]
             elif criteria == "info":
                 return [data for data in data_batch if "error" not in data]
-        finally:
+        except (TypeError, ValueError):
             return data_batch
-        
+
         return data_batch
+
+    def get_stats(self) -> Dict[str, str | int | float]:
+        """Return basic stream statistics with personalized text"""
+        return {
+            "stream_id": "Events: " + self.stream_id,
+            "processed_count": self.processed_count
+        }
+
 
 class StreamProcessor:
 
@@ -222,8 +235,8 @@ class StreamProcessor:
         self.streams: List[DataStream] = streams
 
     def process_streams(
-        self,
-        data_map: Dict[str, List[Any]]) -> None:
+                        self,
+                        data_map: Dict[str, List[Any]]) -> None:
         """Process all streams using the provided data map.
 
         Args:
@@ -239,9 +252,9 @@ class StreamProcessor:
                 print(f"Processing error in {stream.stream_id}: {e}")
 
     def filter_streams(
-        self,
-        data_map: Dict[str, List[Any]],
-        criteria_map: Dict[str, str]) -> None:
+            self,
+            data_map: Dict[str, List[Any]],
+            criteria_map: Dict[str, str]) -> None:
         """Filter all streams using the provided criteria map.
 
         Args:
