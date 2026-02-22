@@ -24,6 +24,8 @@ class InputStage:
 class TransformStage:
     def process(self, data: Any) -> Any:
         print("Stage Transform: Enriching data")
+        if data == "FAIL":
+            raise ValueError("Invalid data format")
         return data
 
 
@@ -49,8 +51,14 @@ class ProcessingPipeline(ABC):
         for stage in self.stages:
             try:
                 current_data = stage.process(current_data)
-            except Exception as e:
-                print(f"Stage error: {e}")
+            except (TypeError, ValueError) as e:
+                print(f"Error detected in stage: {e}")
+                print("Recovery initiated: Switching to safe mode")
+
+                # Fallback strategy
+                current_data = f"[RECOVERED]{current_data}"
+
+                print("Recovery successful. Continuing pipeline.")
 
         return current_data
 
@@ -94,13 +102,13 @@ class NexusManager():
     def add_pipeline(self, pipeline: ProcessingPipeline) -> None:
         self.pipelines.append(pipeline)
 
-    def execute_all(self, data: Any):
-        """This is an individual execute of processes"""
+    def execute_all(self, data: Any) -> None:
+        """“Execute all registered pipelines independently.”"""
         for pipeline in self.pipelines:
             try:
                 result: Any = pipeline.process(data)
                 print(f"Nexus Manager result: {result}\n")
-            except Exception as e:
+            except (TypeError, ValueError) as e:
                 print(f"Error procesing data {e}")
 
     def execute_chain(self, data: Any) -> Any:
@@ -114,11 +122,6 @@ class NexusManager():
             current_data = pipeline.process(current_data)
             i = i + 1
         return current_data
-
-    def get_pipelines(self):
-        """Just for fun :)."""
-        for pipeline in self.pipelines:
-            yield pipeline
 
 
 def main():
@@ -168,7 +171,7 @@ def main():
     manager.execute_all(input_data)
 
     print("\n=== Statistics ===")
-    for pipeline in manager.get_pipelines():
+    for pipeline in manager.pipelines:
         print(f"Pipeline {pipeline.pipeline_id}: {pipeline.processed_count}")
 
     print("\n=== Pipeline Chaining Demo ===")
@@ -178,8 +181,13 @@ def main():
     print("Chain result:", final)
 
     print("\n=== Statistics ===")
-    for pipeline in manager.get_pipelines():
+    for pipeline in manager.pipelines:
         print(f"Pipeline {pipeline.pipeline_id}: {pipeline.processed_count}")
+
+    print("\n=== Error Recovery Test ===")
+    print("Simulating pipeline failure...\n")
+
+    manager.execute_all("FAIL")
 
 
 if __name__ == "__main__":

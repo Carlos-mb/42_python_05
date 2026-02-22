@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict  # typings are different in modern Python
 
 
 class DataStream(ABC):
@@ -19,7 +19,7 @@ class DataStream(ABC):
         self.stream_id: str = stream_id
 
     @abstractmethod
-    def process_batch(self, data_batch: List[Any]) -> str:
+    def process_batch(self, data_batch: list[Any]) -> str:
         """Process a batch of data and return a summary string.
 
         Args:
@@ -30,11 +30,9 @@ class DataStream(ABC):
         """
         pass
 
-    def filter_data(
-        self,
-        data_batch: List[Any],
-        criteria: Optional[str] = None
-    ) -> List[Any]:
+    def filter_data(self,
+                    data_batch: list[Any],
+                    criteria: str | None = None) -> list[Any]:
         """Return a filtered batch based on optional criteria.
 
         Args:
@@ -73,7 +71,7 @@ class SensorStream(DataStream):
         """
         super().__init__(stream_id)
 
-    def process_batch(self, data_batch: List[Any]) -> str:
+    def process_batch(self, data_batch: list[Any]) -> str:
         """Process sensor readings and report the average.
 
         Args:
@@ -95,8 +93,8 @@ class SensorStream(DataStream):
 
     def filter_data(
                     self,
-                    data_batch: List[Any],
-                    criteria: Optional[str] = None) -> List[Any]:
+                    data_batch: list[Any],
+                    criteria: str | None = None) -> list[Any]:
         """Filter sensor readings by criteria.
 
         Args:
@@ -143,7 +141,7 @@ class TransactionStream(DataStream):
         """
         super().__init__(stream_id)
 
-    def process_batch(self, data_batch: List[Any]) -> str:
+    def process_batch(self, data_batch: list[Any]) -> str:
         """Process transactions and report the net flow.
 
         Args:
@@ -165,9 +163,9 @@ class TransactionStream(DataStream):
 
     def filter_data(
                     self,
-                    data_batch: List[Any],
-                    criteria: Optional[str] = None
-                ) -> List[Any]:
+                    data_batch: list[Any],
+                    criteria: str | None = None
+                ) -> list[Any]:
         """Filter transactions by criteria.
 
         Args:
@@ -219,7 +217,7 @@ class EventStream(DataStream):
         """
         super().__init__(stream_id)
 
-    def process_batch(self, data_batch: List[Any]) -> str:
+    def process_batch(self, data_batch: list[Any]) -> str:
         """Process events and report error counts.
 
         Args:
@@ -244,10 +242,9 @@ class EventStream(DataStream):
             return f"[{self.stream_id}] Invalid event data"
 
     def filter_data(
-        self,
-        data_batch: List[Any],
-        criteria: Optional[str] = None
-    ) -> List[Any]:
+                    self,
+                    data_batch: list[Any],
+                    criteria: str | None = None) -> list[Any]:
         """Filter events by criteria.
 
         Args:
@@ -291,17 +288,17 @@ class StreamProcessor:
     batch processing and filtering operations.
     """
 
-    def __init__(self, streams: List[DataStream]) -> None:
+    def __init__(self, streams: list[DataStream]) -> None:
         """Initialize the processor with streams.
 
         Args:
             streams: Streams to process.
         """
-        self.streams: List[DataStream] = streams
+        self.streams: list[DataStream] = streams
 
     def process_streams(
                         self,
-                        data_map: Dict[str, List[Any]]) -> None:
+                        data_map: Dict[str, list[Any]]) -> None:
         """Process all streams using the provided data map.
 
         Args:
@@ -316,12 +313,12 @@ class StreamProcessor:
             try:
                 result: str = stream.process_batch(batch)
                 print(result)
-            except Exception as e:
+            except (TypeError, ValueError) as e:
                 print(f"Processing error in {stream.stream_id}: {e}")
 
     def filter_streams(
             self,
-            data_map: Dict[str, List[Any]],
+            data_map: Dict[str, list[Any]],
             criteria_map: Dict[str, str]) -> None:
         """Filter all streams using the provided criteria map.
 
@@ -342,7 +339,7 @@ class StreamProcessor:
                     f"{stream.stream_id}: "
                     f"{len(filtered)} filtered item(s)"
                 )
-            except Exception as e:
+            except (TypeError, ValueError) as e:
                 print(f"Filtering error in {stream.stream_id}: {e}")
 
 
@@ -352,13 +349,13 @@ def main() -> None:
     Creates sensor, transaction, and event streams, then demonstrates
     batch processing, filtering, and statistics gathering.
     """
-    data_streams: List[DataStream] = [
+    data_streams: list[DataStream] = [
         SensorStream("SENSOR_001"),
         TransactionStream("TRANS_001"),
         EventStream("EVENT_001")
     ]
 
-    data_lists: Dict[str, List[Any]] = {
+    data_lists: Dict[str, list[Any]] = {
         "SENSOR_001": [22.5, 50, 21.8],
         "TRANS_001": [100.00, 150.00, -75.00],
         "EVENT_001": ["login", "error", "logout"]

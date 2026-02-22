@@ -21,6 +21,7 @@ class DataProcessor(ABC):
         """
         ...
 
+    @abstractmethod
     def validate(self, data: Any) -> bool:
         """Validate if the input data is of the correct type.
 
@@ -61,11 +62,14 @@ class NumericProcessor(DataProcessor):
             True if data is a list of numbers, False otherwise.
         """
         try:
+            len(data)
+            total: int = 0
             for num in data:
-                num.is_integer
-        except (AttributeError, TypeError):
+                total += num
+        except (ValueError, TypeError):
             print("Not list of numbers")
             return False
+
         print("Validation: Numeric data verified")
         return True
 
@@ -78,10 +82,13 @@ class NumericProcessor(DataProcessor):
         Returns:
             A string with count, sum, and average of the values.
         """
-        return (
-            f"Processed {len(data)} numeric values "
-            f", sum={sum(data)}, avg={sum(data) / len(data)}"
-        )
+        output: str
+        try:
+            output = (f"Processed {len(data)} numeric values "
+                      f", sum={sum(data)}, avg={sum(data) / len(data)}")
+        except (ValueError, TypeError) as e:
+            output = f"Numeric Processor Error: {e}"
+        return self.format_output(output)
 
 
 class TextProcessor(DataProcessor):
@@ -101,7 +108,7 @@ class TextProcessor(DataProcessor):
         """
         try:
             data.capitalize()
-        except (AttributeError, TypeError):
+        except (ValueError, TypeError):
             print("Not a string")
             return False
         print("Validation: Text data verified")
@@ -116,7 +123,14 @@ class TextProcessor(DataProcessor):
         Returns:
             A string with character and word count statistics.
         """
-        return f"Processed text: {len(data)} chars, {len(data.split())} words"
+        output: str = ""
+
+        try:
+            output = (f"Processed text: {len(data)} chars,"
+                      f" {len(data.split())} words")
+        except (TypeError, ValueError) as e:
+            output = f"Text Processor Error: {e}"
+        return self.format_output(output)
 
 
 class LogProcessor(DataProcessor):
@@ -154,11 +168,15 @@ class LogProcessor(DataProcessor):
             A formatted log message with appropriate alert level.
         """
         output: str = ""
-        if data.find("ERROR") > -1:
-            output = "[ALERT] ERROR level detected: " + data[7:]
-        elif data.find("INFO") > -1:
-            output = "[INFO] INFO level detected: " + data[6:]
-        return output
+
+        try:
+            if data.find("ERROR") > -1:
+                output = "[ALERT] ERROR level detected: " + data[7:]
+            elif data.find("INFO") > -1:
+                output = "[INFO] INFO level detected: " + data[6:]
+        except (TypeError, AttributeError) as e:
+            output = f"Log Processor Error: {e}"
+        return self.format_output(output)
 
     def format_output(self, result: str) -> str:
         """Override the format_output method for log-specific formatting.
@@ -169,7 +187,7 @@ class LogProcessor(DataProcessor):
         Returns:
             The formatted result with log prefix.
         """
-        return "Overiden log:" + result
+        return "Overridden log:" + result
 
 
 def main() -> None:
@@ -181,7 +199,7 @@ def main() -> None:
     print("Initializing Numeric Processor...")
     print("Processing data: [1, 2, 3, 4, 5]")
     lst: list[int] = [1, 2, 3, 4, 5]
-    processor = NumericProcessor()
+    processor: DataProcessor = NumericProcessor()
     if processor.validate(data=lst):
         print(processor.process(data=lst))
     # Just to check
