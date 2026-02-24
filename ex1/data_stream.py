@@ -228,10 +228,13 @@ class EventStream(DataStream):
         """
         try:
             total = len(data_batch)
-            error_count = sum(
-                1 for event in data_batch
-                if isinstance(event, str) and "error" in event
-            )
+            error_count = 0
+            for event in data_batch:
+                try:
+                    if "error" in event or "ERROR" in event:
+                        error_count += 1
+                except TypeError:
+                    pass
             self.processed_count += total
             return (
                 f"[{self.stream_id}] "
@@ -288,17 +291,29 @@ class StreamProcessor:
     batch processing and filtering operations.
     """
 
-    def __init__(self, streams: list[DataStream]) -> None:
+    # def __init__(self, streams: list[DataStream]) -> None:
+    #     """Initialize the processor with streams.
+
+    #     Args:
+    #         streams: Streams to process.
+    #     """
+    #     self.streams: list[DataStream] = streams
+
+    def __init__(self, streams: list[DataStream] | None = None) -> None:
         """Initialize the processor with streams.
 
         Args:
             streams: Streams to process.
         """
-        self.streams: list[DataStream] = streams
+        if streams is None:
+            self.streams = []
+        else:
+            self.streams = streams
 
     def process_streams(
                         self,
-                        data_map: Dict[str, list[Any]]) -> None:
+                        data_map: Dict[str, list[Any]]
+                        ) -> None:
         """Process all streams using the provided data map.
 
         Args:
@@ -307,6 +322,10 @@ class StreamProcessor:
         Returns:
             None. Results are printed to stdout.
         """
+
+        if not self.streams:
+            print("No streams registered.")
+            return
 
         for stream in self.streams:
             batch: list[Any] = data_map.get(stream.stream_id, [])

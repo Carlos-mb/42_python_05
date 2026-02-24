@@ -66,7 +66,7 @@ class NumericProcessor(DataProcessor):
             total: int = 0
             for num in data:
                 total += num
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, AttributeError):
             print("Not list of numbers")
             return False
 
@@ -86,7 +86,7 @@ class NumericProcessor(DataProcessor):
         try:
             output = (f"Processed {len(data)} numeric values "
                       f", sum={sum(data)}, avg={sum(data) / len(data)}")
-        except (ValueError, TypeError) as e:
+        except (TypeError, ValueError, AttributeError) as e:
             output = f"Numeric Processor Error: {e}"
         return self.format_output(output)
 
@@ -108,7 +108,7 @@ class TextProcessor(DataProcessor):
         """
         try:
             data.capitalize()
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, AttributeError):
             print("Not a string")
             return False
         print("Validation: Text data verified")
@@ -128,7 +128,7 @@ class TextProcessor(DataProcessor):
         try:
             output = (f"Processed text: {len(data)} chars,"
                       f" {len(data.split())} words")
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, AttributeError) as e:
             output = f"Text Processor Error: {e}"
         return self.format_output(output)
 
@@ -153,7 +153,7 @@ class LogProcessor(DataProcessor):
             if data.find("ERROR") > -1 or data.find("INFO") > -1:
                 print("Validation: Log entry verified")
                 return True
-        except (AttributeError, TypeError):
+        except (TypeError, ValueError, AttributeError):
             print("Not a log entry")
             return False
         return False
@@ -174,7 +174,7 @@ class LogProcessor(DataProcessor):
                 output = "[ALERT] ERROR level detected: " + data[7:]
             elif data.find("INFO") > -1:
                 output = "[INFO] INFO level detected: " + data[6:]
-        except (TypeError, AttributeError) as e:
+        except (TypeError, ValueError, AttributeError) as e:
             output = f"Log Processor Error: {e}"
         return self.format_output(output)
 

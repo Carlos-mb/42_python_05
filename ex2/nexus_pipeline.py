@@ -115,7 +115,7 @@ class NexusManager():
         """This is a pipeline.
         The output of one stage is the input of the next"""
 
-        current_data = data
+        current_data: Any = data
         i: int = 1
         for pipeline in self.pipelines:
             print(f"\nChain pass {i}: ")
@@ -124,7 +124,7 @@ class NexusManager():
         return current_data
 
 
-def main():
+def main() -> None:
     """
     main()
     ↓
